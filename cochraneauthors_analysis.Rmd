@@ -10,43 +10,96 @@ output: html_document
 ```{r}
 pacman::p_load(dplyr,
                here,
-               purrr,
-               rvest)
+               ggplot2,
+               maps,
+               stringr,
+               rnaturalearth)
 ```
 
 
-# Loading the datasets
+# Loading the dataset
 ```{r}
-reviews <- read.csv(here("data", "cochraneauthors_db_may8.csv"))
+db <- read.csv(here("data", "cochraneauthors_db.csv"))
 ```
 
-## Getting the URL list:
+# Overall perspective
+
+Total number of papers:
 ```{r}
-URLlist <- data.frame(DOI=reviews$DOI, 
-                      URL=paste0("https://www.cochranelibrary.com/cdsr/doi/",reviews$DOI,"/information"))
+nrow(reviews)
 ```
 
-## Catching the authros information using webscrapping from CochraneLibrary.com website:
+Number of papers that their authors affiliations were retrieved from Cochrane Library successfully:
 ```{r}
-slicedlist <- list(countries1000 = slice(URLlist, 1:1000),
-                   countries2000 = slice(URLlist, 1001:2000),
-                   countries3000 = slice(URLlist, 2001:3000),
-                   countries4000 = slice(URLlist, 3001:4000),
-                   countries5000 = slice(URLlist, 4001:5000),
-                   countries6000 = slice(URLlist, 5001:6000),
-                   countries7000 = slice(URLlist, 6001:7000),
-                   countries8000 = slice(URLlist, 7001:8000),
-                   countries9000 = slice(URLlist, 8001:nrow(URLlist)))
-
-a <- read_html(slicedlist[1][[1]]$URL[1]) %>% html_nodes(".authors") %>% 
-  map(~html_nodes(.x, 'li') %>% 
-        html_text() %>% 
-        gsub(pattern = '\\t|\\r|\\n', replacement = ''))
+nrow(db)
+```
 
 
-countries <- tryCatch(as.data.frame(affiliations = pbsapply(countries$URL, function(url) {
-  read_html(url) %>% html_nodes(".authors") %>% 
-    html_text()
-})), error = function(e) {NA})
+# Country and region diversity
+
+```{r}
+
+```
+
+
+# English-speaking diversity
+
+## Trend
+```{r}
+
+yearly_trend <- db %>%
+  select(year, first_author_english) %>%
+  group_by(year) %>%
+  summarise(counts = n(),
+            english_speaking = sum(first_author_english == "Yes")) %>%
+  mutate(p = english_speaking / counts)
+
+
+p1 <-
+        yearly_trend %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        labs(   title="Proportion of papers with first authors from developed English-speaking countries",
+                y = "Proportion of articles (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.13, 0.87),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+p1
+```
+
+
+# Gender diversity
+
+### Trend
+```{r}
+
+yearly_trend_gender <- db %>%
+  select(year, country_1stauthor_gender) %>%
+  group_by(year) %>%
+  summarise(MtoF = sum(country_1stauthor_gender == "M")/sum(country_1stauthor_gender == "F"))
+
+
+pg1 <-
+        yearly_trend_gender %>% 
+        ggplot() +
+        aes(x = year, 
+            y = MtoF) +
+        geom_line(size = 0.75) +
+        scale_color_discrete(name = NULL) +
+        labs(   title="Male to female ratio for each year",
+                y = "Ratio", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.13, 0.87),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+pg1
 ```
 

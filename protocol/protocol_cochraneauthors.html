@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-0.9.315">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ahmad Sofi-Mahmudi">
+
+<title>Diversity in Cochrane Reviews’ authorship: Protocol for a meta-research study</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<script src="protocol_cochraneauthors_files/libs/clipboard/clipboard.min.js"></script>
+<script src="protocol_cochraneauthors_files/libs/quarto-html/quarto.js"></script>
+<script src="protocol_cochraneauthors_files/libs/quarto-html/popper.min.js"></script>
+<script src="protocol_cochraneauthors_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="protocol_cochraneauthors_files/libs/quarto-html/anchor.min.js"></script>
+<link href="protocol_cochraneauthors_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link id="quarto-text-highlighting-styles" href="protocol_cochraneauthors_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet">
+<script src="protocol_cochraneauthors_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="protocol_cochraneauthors_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="protocol_cochraneauthors_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Diversity in Cochrane Reviews’ authorship: Protocol for a meta-research study</h1>
+</div>
+
+
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ahmad Sofi-Mahmudi </p>
+          </div>
+  </div>
+    
+    
+  </div>
+  
+
+</header>
+
+<p>Seqiz Health Network, Kurdistan University of Medical Sciences, Seqiz, Iran.</p>
+<p>Cochrane Iran Associate Centre, National Institute for Medical Research Development (NIMAD), Tehran, Iran.</p>
+<p><strong>Corresponding author:</strong> Ahmad Sofi-Mahmudi; <strong>Address</strong>: 41, Shanaz St., Seqiz, Kurdistan, Iran; <strong>Telephone</strong>: +98 87 362 34834; <strong>Email</strong>: a.sofimahmudi@gmail.com.</p>
+<section id="abstract" class="level1">
+<h1>Abstract</h1>
+<p><strong>Objective and aim:</strong> To examine the level of country, region, language, and gender diversity in Cochrane Reviews’ authorship.</p>
+<p><strong>Methods:</strong> I will search for all Cochrane Reviews available through Cochrane Library website (cochranelibrary.com). After extracting the list of reviews, I will extract the affiliations for all authors. Next, I will extract affiliations for first authors, corresponding authors, and last authors. Then, I will assess the proportion of authors from all countries and World Bank income regions as well as developed English-speaking countries. Furthermore, I will assess gender diversity by calculating male-to-female ratio. I will provide yearly trend for each of the abovementioned proportions. I will use R for searches, data handling, analysis and reporting.</p>
+<p><strong><em>Keywords:</em></strong> Meta-research; Cochrane; Cochrane Reviews; Systematic Review; Gender Equity; Authorship.</p>
+</section>
+<section id="aims" class="level1">
+<h1>Aims</h1>
+<p>The aim of this meta-research study is to examine the level of country, region, language, and gender diversity in Cochrane Reviews’ authorship via a fully-automated reproducible approach.</p>
+</section>
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<section id="data-sources-and-study-selection" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources-and-study-selection">Data sources and study selection</h2>
+<p>I will search for all Cochrane Reviews available through Cochrane Library website (cochranelibrary.com) in .csv format.</p>
+</section>
+<section id="data-extraction-and-synthesis" class="level2">
+<h2 class="anchored" data-anchor-id="data-extraction-and-synthesis">Data extraction and synthesis</h2>
+<p>After extracting the list of reviews, I will extract the affiliations for all authors from the Cochrane Library website using web crawling technique. The web address I will use follows this pattern:</p>
+<p>“https://www.cochranelibrary.com/cdsr/doi/”</p>
+<p>+</p>
+<p>DOI</p>
+<p>+</p>
+<p>“/information”</p>
+<p>I will search for “authors” html node and then extract each item and put it in a list. Then, I will merge this list with .csv file that contains information regarding each Review.</p>
+<p>Next, I will extract affiliations for first authors, corresponding authors, and last authors. Then, I will assess the proportion of authors from all countries and World Bank income regions (databank.worldbank.org) as well as developed English-speaking countries. Developed English-speaking countries are:</p>
+<ul>
+<li><p>United States;</p></li>
+<li><p>United Kingdom;</p></li>
+<li><p>Canada;</p></li>
+<li><p>Australia;</p></li>
+<li><p>Ireland;</p></li>
+<li><p>New Zealand.</p></li>
+</ul>
+<p>Furthermore, I will assess gender diversity by calculating male-to-female ratio. The database that I will use is World Gender Name Dictionary <span class="citation" data-cites="Raffo2021">(<a href="#ref-Raffo2021" role="doc-biblioref">1</a>)</span>.</p>
+<p>I will provide yearly trend for each of the abovementioned proportions.</p>
+</section>
+<section id="data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="data-analysis">Data analysis</h2>
+<p>We will use R <span class="citation" data-cites="base">(<a href="#ref-base" role="doc-biblioref">2</a>)</span> for searches, data handling, analysis and reporting. Web scrapping will be done using <em>rvest</em> package <span class="citation" data-cites="rvest">(<a href="#ref-rvest" role="doc-biblioref">3</a>)</span>. Trends over time will be reported using descriptive tabulations and graphical illustrations, for instance using the <em>ggplot2</em> package <span class="citation" data-cites="ggplot2">(<a href="#ref-ggplot2" role="doc-biblioref">4</a>)</span>.</p>
+<p>The protocol of this study will be published beforehand on the Open Science Framework website (OSF, osf.io).</p>
+</section>
+</section>
+<section id="limitations" class="level1">
+<h1>Limitations</h1>
+<p>This study includes only papers shown on the Cochrane Library website Search section. This section does not show previous versions of the Reviews. However, as the majority of these previous versions are authored by the same authors as the latest version, this will have small effect on the accuracy of the results of this study.</p>
+</section>
+<section id="references" class="level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body" role="doc-bibliography">
+<div id="ref-Raffo2021" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">1. </div><div class="csl-right-inline">Raffo J. WGND 2.0 [Internet]. Harvard Dataverse; 2021. Available from: <a href="https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/MSEGSJ">https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/MSEGSJ</a></div>
+</div>
+<div id="ref-base" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">2. </div><div class="csl-right-inline">R Core Team. R: A language and environment for statistical computing. 2022; Available from: <a href="https://www.R-project.org/">https://www.R-project.org/</a></div>
+</div>
+<div id="ref-rvest" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">3. </div><div class="csl-right-inline">Wickham H. Rvest: Easily harvest (scrape) web pages. 2021; Available from: <a href="https://CRAN.R-project.org/package=rvest">https://CRAN.R-project.org/package=rvest</a></div>
+</div>
+<div id="ref-ggplot2" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">4. </div><div class="csl-right-inline">Wickham H. ggplot2: Elegant graphics for data analysis. 2016; Available from: <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a></div>
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

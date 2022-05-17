@@ -1,0 +1,99 @@
+---
+title: "Diversity in Cochrane Reviews' authorship"
+
+author:
+  - Ahmad Sofi-Mahmudi
+  
+#format: html
+#format:
+#  pdf:
+#    colorlinks: true
+format:
+  docx:
+    section-numbers: true
+    highlight-style: github
+editor: visual
+from: markdown+tex_math_single_backslash
+csl: vancouver.csl
+bibliography: references.bib
+---
+
+Seqiz Health Network, Kurdistan University of Medical Sciences, Seqiz, Iran.
+
+Cochrane Iran Associate Centre, National Institute for Medical Research Development (NIMAD), Tehran, Iran.
+
+**Corresponding author:** Ahmad Sofi-Mahmudi; **Address**: 41, Shanaz St., Seqiz, Kurdistan, Iran; **Telephone**: +98 87 362 34834; **Email**: a.sofimahmudi\@gmail.com.
+
+# Abstract
+
+**Objective and aim:** To examine the level of country, region, language, and gender diversity in Cochrane Reviews' authorship.
+
+**Methods:** I will search for all Cochrane Reviews available through Cochrane Library website (cochranelibrary.com). After extracting the list of reviews, I will extract the affiliations for all authors. Next, I will extract affiliations for first authors, corresponding authors, and last authors. Then, I will assess the proportion of authors from all countries and World Bank income regions as well as developed English-speaking countries. Furthermore, I will assess gender diversity by calculating male-to-female ratio. I will provide yearly trend for each of the abovementioned proportions. I will use R for searches, data handling, analysis and reporting.
+
+***Keywords:*** Meta-research; Cochrane; Cochrane Reviews; Systematic Review; Gender Equity; Authorship.
+
+# Aims
+
+The aim of this meta-research study is to examine the level of country, region, language, and gender diversity in Cochrane Reviews' authorship via a fully-automated reproducible approach.
+
+# Methods
+
+## Data sources and study selection
+
+I will search for all Cochrane Reviews available through Cochrane Library website (cochranelibrary.com) in .csv format.
+
+## Data extraction and synthesis
+
+After extracting the list of reviews, I will extract the affiliations for all authors from the Cochrane Library website using web crawling technique. The web address I will use follows this pattern:
+
+"https://www.cochranelibrary.com/cdsr/doi/"
+
+\+
+
+DOI
+
+\+
+
+"/information"
+
+I will search for "authors" html node and then extract each item and put it in a list. Then, I will merge this list with .csv file that contains information regarding each Review.
+
+Next, I will extract affiliations for first authors, corresponding authors, and last authors. Then, I will assess the proportion of authors from all countries and World Bank income regions (databank.worldbank.org) as well as developed English-speaking countries. Developed English-speaking countries are:
+
+-   United States;
+
+-   United Kingdom;
+
+-   Canada;
+
+-   Australia;
+
+-   Ireland;
+
+-   New Zealand.
+
+Furthermore, I will assess gender diversity by calculating male-to-female ratio. The database that I will use is World Gender Name Dictionary [@Raffo2021].
+
+I will provide yearly trend for each of the abovementioned proportions.
+
+## Data analysis
+
+I will use R [@base] for searches, data handling, analysis and reporting. Web scrapping will be done using *rvest* package @rvest. Trends over time will be reported using descriptive tabulations and graphical illustrations, for instance using the *ggplot2* package @ggplot2.
+
+The protocol of this study will be published beforehand on the Open Science Framework website (OSF, osf.io).
+
+# Results
+
+## Overall perspective
+
+## Country and region diversity
+
+## English-speaking diversity
+
+## Gender diversity
+
+# Limitations
+
+This study includes only papers shown on the Cochrane Library website Search section. This section does not show previous versions of the Reviews. However, as the majority of these previous versions are authored by the same authors as the latest version, this will have small effect on the accuracy of the results of this study.
+
+# References
