@@ -10,6 +10,7 @@ output: html_document
 ```{r}
 pacman::p_load(dplyr,
                here,
+               knitr,
                ggplot2,
                maps,
                stringr,
@@ -19,7 +20,9 @@ pacman::p_load(dplyr,
 
 # Loading the dataset
 ```{r}
-db <- read.csv(here("data", "cochraneauthors_db.csv"))
+db <- read.csv(here("data", "cochraneauthors_db.csv"), 
+               header = TRUE,
+               na.strings = c("", "NA"))
 ```
 
 # Overall perspective
@@ -34,12 +37,132 @@ Number of papers that their authors affiliations were retrieved from Cochrane Li
 nrow(db)
 ```
 
+Percentage of affiliations successfully retrieved:
+```{r}
+round(nrow(db)/8824*100, 1)
+```
+
 
 # Country and region diversity
 
-```{r}
+## First authors
+### Countries
 
+The number of countries detected successfully:
+```{r}
+sum(table(db$first_author_country))
 ```
+
+Top ten countries with the highest number of first authors:
+```{r}
+top_first <- table(db$first_author_country) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_first) <- c("country", "frequency")
+
+kable(top_first[1:10,])
+```
+
+Map
+```{r}
+# Loading the world map
+world_map <- map_data("world")
+world_map <- subset(world_map, region != "Antarctica")
+
+# Some modifications are needed
+top_first$country <- as.character(top_first$country)
+top_first$country[top_first$country == "United States"] <- "USA"
+top_first$country[top_first$country == "United Kingdom"] <- "UK"
+top_first$country <- as.factor(top_first$country)
+
+# Drawing the map
+ggplot(top_first) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = frequency), size = 0.25) +
+  scale_fill_gradient(low = "#fff7bc", high = "#cc4c02", name = "Total First Authors") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+```
+
+
+### United Nations regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$first_author_region_un))
+```
+
+Top regions with the highest number of first authors:
+```{r}
+top_un_first <- table(db$first_author_region_un) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_un_first) <- c("un region", "frequency")
+
+kable(top_un_first)
+```
+
+### World Bank regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$first_author_region_wb))
+```
+
+Top regions with the highest number of first authors:
+```{r}
+top_wb_first <- table(db$first_author_region_wb) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_wb_first) <- c("wb region", "frequency")
+
+kable(top_wb_first)
+```
+### Income-level regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$first_author_region_income))
+```
+
+Top regions with the highest number of first authors:
+```{r}
+top_income_first <- table(db$first_author_region_income) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_income_first) <- c("income region", "frequency")
+
+kable(top_income_first)
+```
+
+## Last authors
+### Countries
+
+### United Nations regions
+
+### World Bank regions
+
+### Income-level regions
+
+
+## Corresponding authors
+### Countries
+
+### United Nations regions
+
+### World Bank regions
+
+### Income-level regions
 
 
 # English-speaking diversity
