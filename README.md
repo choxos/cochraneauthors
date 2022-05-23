@@ -15,7 +15,8 @@ Top five countries with the highest number of first authors:
 | Australia      | 1025      |
 | United States  | 600       |
 | Canada         | 599       |
-| China          |           |
+| China          | 418       |
+
 This maps shows the total number of first authors from each country.
 ![First authors world map](figures/fig_first_authors_countries.png)
 
@@ -27,24 +28,25 @@ Regions sorted descending based on the total number of first authors:
 | Americas  | 1609      |
 | Oceania   | 1189      |
 | Asia      | 993       |
-| Africa    |           |
+| Africa    | 303       |
+
 #### World Bank regions
 Regions sorted descending based on the total number of first authors:
-| WB Region  | Frequency  |
-| Europe & Central Asia  | 4657  |
-| East Asia & Pacific | 1857  |
-| North America  | 1199  |
-| Latin America & Caribbean  | 409  |
-| Sub-Saharan Africa  | 279  |
-| South Asia  | 183  |
-| Middle East & North Africa  | 160  |
+| WB Region                  | Frequency |
+|----------------------------|-----------|
+| Europe & Central Asia      | 4657      |
+| East Asia & Pacific        | 1857      |
+| North America              | 1199      |
+| Latin America & Caribbean  | 409       |
+| Sub-Saharan Africa         | 279       |
+| South Asia                 | 183       |
+| Middle East & North Africa | 160       |
 
 #### World Bank Income-level regions
 | WB Income Region      | Frequency |
 |-----------------------|-----------|
 | High income: OECD     | 7110      |
-| Upper-middle income   | 1213
-     |
+| Upper-middle income   | 1213      |
 | Lower-middle income   | 263       |
 | Low income            | 90        |
-| High income: non-OECD |           |
+| High income: non-OECD | 68        |
