@@ -43,6 +43,7 @@ Regions sorted descending based on the total number of first authors:
 | Middle East & North Africa | 160       |
 
 #### World Bank Income-level regions
+Regions sorted descending based on the total number of first authors:
 | WB Income Region      | Frequency |
 |-----------------------|-----------|
 | High income: OECD     | 7110      |
