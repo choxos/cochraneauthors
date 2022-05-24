@@ -18,7 +18,7 @@ Top five countries with the highest number of first authors:
 | China          | 418       |
 
 This maps shows the total number of first authors from each country.
-![First authors world map](figures/fig_first_authors_countries.png)
+![First authors world map](figures/fig_first_authors_countries_2.png)
 
 #### United Nations regions
 Regions sorted descending based on the total number of first authors:
