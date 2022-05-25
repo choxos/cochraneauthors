@@ -12,6 +12,7 @@ pacman::p_load(dplyr,
                here,
                knitr,
                ggplot2,
+               tidyr,
                maps,
                stringr,
                rnaturalearth)
@@ -148,24 +149,318 @@ kable(top_income_first)
 ## Last authors
 ### Countries
 
+The number of countries detected successfully:
+```{r}
+sum(table(db$last_author_country))
+```
+
+Top ten countries with the highest number of first authors:
+```{r}
+top_last <- table(db$last_author_country) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_last) <- c("country", "frequency")
+
+kable(top_last[1:10,])
+```
+
+Map
+```{r}
+# Loading the world map
+world_map <- map_data("world")
+world_map <- subset(world_map, region != "Antarctica")
+
+# Some modifications are needed
+top_last$country <- as.character(top_last$country)
+top_last$country[top_last$country == "United States"] <- "USA"
+top_last$country[top_last$country == "United Kingdom"] <- "UK"
+top_last$country <- as.factor(top_last$country)
+
+# Drawing the map
+ggplot(top_last) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = frequency), size = 0.25) +
+  scale_fill_gradient(low = "#fff7bc", high = "#cc4c02", name = "Total Last Authors") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+```
+
+
 ### United Nations regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$last_author_region_un))
+```
+
+Top regions with the highest number of first authors:
+```{r}
+top_un_last <- table(db$last_author_region_un) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_un_last) <- c("un region", "frequency")
+
+kable(top_un_last)
+```
 
 ### World Bank regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$last_author_region_wb))
+```
 
+Top regions with the highest number of first authors:
+```{r}
+top_wb_last <- table(db$last_author_region_wb) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_wb_last) <- c("wb region", "frequency")
+
+kable(top_wb_last)
+```
 ### Income-level regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$last_author_region_income))
+```
 
+Top regions with the highest number of first authors:
+```{r}
+top_income_last <- table(db$last_author_region_income) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_income_last) <- c("income region", "frequency")
+
+kable(top_income_last)
+
+```
 
 ## Corresponding authors
 ### Countries
 
+The number of countries detected successfully:
+```{r}
+sum(table(db$corresponding_author_country))
+```
+
+Top ten countries with the highest number of first authors:
+```{r}
+top_corresponding <- table(db$corresponding_author_country) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_corresponding) <- c("country", "frequency")
+
+kable(top_corresponding[1:10,])
+```
+
+Map
+```{r}
+# Loading the world map
+world_map <- map_data("world")
+world_map <- subset(world_map, region != "Antarctica")
+
+# Some modifications are needed
+top_corresponding$country <- as.character(top_corresponding$country)
+top_corresponding$country[top_corresponding$country == "United States"] <- "USA"
+top_corresponding$country[top_corresponding$country == "United Kingdom"] <- "UK"
+top_corresponding$country <- as.factor(top_corresponding$country)
+
+# Drawing the map
+ggplot(top_corresponding) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = frequency), size = 0.25) +
+  scale_fill_gradient(low = "#fff7bc", high = "#cc4c02", name = "Total Last Authors") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+```
+
+
 ### United Nations regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$corresponding_author_region_un))
+```
+
+Top regions with the highest number of first authors:
+```{r}
+top_un_corresponding <- table(db$corresponding_author_region_un) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_un_corresponding) <- c("un region", "frequency")
+
+kable(top_un_corresponding)
+```
 
 ### World Bank regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$corresponding_author_region_wb))
+```
 
+Top regions with the highest number of first authors:
+```{r}
+top_wb_corresponding <- table(db$corresponding_author_region_wb) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_wb_corresponding) <- c("wb region", "frequency")
+
+kable(top_wb_corresponding)
+```
 ### Income-level regions
+The number of countries that their region detected successfully:
+```{r}
+sum(table(db$corresponding_author_region_income))
+```
 
+Top regions with the highest number of first authors:
+```{r}
+top_income_corresponding <- table(db$corresponding_author_region_income) %>% 
+  as.data.frame() %>%
+  arrange(desc(Freq))
+
+colnames(top_income_corresponding) <- c("income region", "frequency")
+
+kable(top_income_corresponding)
+
+```
+
+
+# Trends for region diversity
+## Europe vs. non-Europe (Based on the UN regions)
+First, making new columns for Europe vs. non-Europe
+```{r}
+db <- db %>% mutate(first_author_europe = ifelse(first_author_region_un == "Europe", TRUE, FALSE),
+                    corresponding_author_europe = ifelse(corresponding_author_region_un == "Europe", TRUE, FALSE),
+                    last_author_europe = ifelse(last_author_region_un == "Europe", TRUE, FALSE))
+```
+
+Then, making a line graph for all three indicators:
+```{r}
+
+yearly_trend_region_europe <- 
+        db %>% 
+        select(year,
+               first_author_europe,
+               corresponding_author_europe,
+               last_author_europe) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_europe = "First authors from European countries",
+                                  corresponding_author_europe = "Corresponding authors from European countries",
+                                  last_author_europe = "Last authors from European countries")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value) %>%
+        ungroup()
+
+plot_trend_region_europe <-
+        yearly_trend_region_europe %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("First authors from European countries",
+                                       "Corresponding authors from European countries",
+                                       "Last authors from European countries")) +
+        labs(   title="Region diversity in Cochrane Reviews' authorship: Europe vs. non-Europe",
+                y = "Proportion of authors from European countries (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.2, 0.90),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+
+plot_trend_region_europe
+```
+
+
+## High income: OECD vs. non-High income: OECD (based on the WB income regions)
+First, making new columns for High income: OECD vs. non-High income: OECD
+```{r}
+db <- db %>% mutate(first_author_highincome = ifelse(first_author_region_income == "1. High income: OECD", TRUE, FALSE),
+                    corresponding_author_highincome = ifelse(corresponding_author_region_income == "1. High income: OECD", TRUE, FALSE),
+                    last_author_highincome = ifelse(last_author_region_income == "1. High income: OECD", TRUE, FALSE))
+```
+
+Then, making a line graph for all three indicators:
+```{r}
+
+yearly_trend_region_highincome <- 
+        db %>% 
+        select(year,
+               first_author_highincome,
+               corresponding_author_highincome,
+               last_author_highincome) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_europe = "First authors from High-income OECD countries",
+                                  corresponding_author_europe = "Corresponding authors from High-income OECD countries",
+                                  last_author_europe = "Last authors from High-income OECD countries")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value) %>%
+        ungroup()
+
+plot_trend_region_highincome <-
+        yearly_trend_region_highincome %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("First authors from High-income OECD countries",
+                                       "Corresponding authors from High-income OECD countries",
+                                       "Last authors from High-income OECD countries")) +
+        labs(   title="Region diversity in Cochrane Reviews' authorship: High-income OECD vs. non-High-income OECD",
+                y = "Proportion of authors from High-income OECD countries (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.2, 0.40),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+
+plot_trend_region_highincome
+```
 
 # English-speaking diversity
+
 
 ## Trend
 ```{r}

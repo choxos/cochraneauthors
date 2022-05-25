@@ -5,13 +5,13 @@ author:
   - Ahmad Sofi-Mahmudi
   
 #format: html
-#format:
-#  pdf:
-#    colorlinks: true
 format:
-  docx:
-    section-numbers: true
-    highlight-style: github
+  pdf:
+    colorlinks: true
+#format:
+#  docx:
+#    section-numbers: true
+#    highlight-style: github
 editor: visual
 from: markdown+tex_math_single_backslash
 csl: vancouver.csl
