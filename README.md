@@ -18,7 +18,7 @@ Top five countries with the highest number of first authors:
 | China          | 418       |
 
 This maps shows the total number of first authors from each country.
-![First authors world map](figures/fig_first_authors_countries_2.png)
+![First authors world map](figures/fig_first-authors_countries.png)
 
 #### United Nations regions
 Regions sorted descending based on the total number of first authors:
@@ -51,3 +51,98 @@ Regions sorted descending based on the total number of first authors:
 | Lower-middle income   | 263       |
 | Low income            | 90        |
 | High income: non-OECD | 68        |
+
+### Last authors
+#### Countries
+Top five countries with the highest number of last authors:
+| Country        | Frequency |
+|----------------|-----------|
+| United Kingdom | 3076      |
+| Australia      | 1059      |
+| Canada  | 643       |
+| United States         | 637       |
+| Netherlands          | 411       |
+
+This maps shows the total number of last authors from each country.
+![Last authors world map](figures/fig_last-authors_countries.png)
+
+#### United Nations regions
+Regions sorted descending based on the total number of last authors:
+| UN Region | Frequency |
+|-----------|-----------|
+| Europe    | 4817      |
+| Americas  | 1605      |
+| Oceania   | 1216      |
+| Asia      | 854       |
+| Africa    | 256       |
+
+#### World Bank regions
+Regions sorted descending based on the total number of last authors:
+| WB Region                  | Frequency |
+|----------------------------|-----------|
+| Europe & Central Asia      | 4831      |
+| East Asia & Pacific        | 1789      |
+| North America              | 1280      |
+| Latin America & Caribbean  | 325       |
+| Sub-Saharan Africa         | 236       |
+| Middle East & North Africa                 | 155       |
+| South Asia	 | 132       |
+
+#### World Bank Income-level regions
+Regions sorted descending based on the total number of last authors:
+| WB Income Region      | Frequency |
+|-----------------------|-----------|
+| High income: OECD     | 7410      |
+| Upper-middle income   | 1003      |
+| Lower-middle income   | 210       |
+| Low income            | 73        |
+| High income: non-OECD | 52        |
+
+### Corresponding authors
+#### Countries
+Top five countries with the highest number of corresponding authors:
+| Country        | Frequency |
+|----------------|-----------|
+| United Kingdom | 1483      |
+| Australia      | 533      |
+| Canada  | 356       |
+| United States	         | 295       |
+| Netherlands          | 202       |
+
+This maps shows the total number of corresponding authors from each country.
+![Corresponding authors world map](figures/fig_corresponding-authors_countries.png)
+
+#### United Nations regions
+Regions sorted descending based on the total number of corresponding authors:
+| UN Region | Frequency |
+|-----------|-----------|
+| Europe    | 2252      |
+| Americas  | 815      |
+| Oceania   | 611      |
+| Asia      | 345       |
+| Africa    | 135       |
+
+#### World Bank regions
+Regions sorted descending based on the total number of corresponding authors:
+| WB Region                  | Frequency |
+|----------------------------|-----------|
+| Europe & Central Asia      | 2254      |
+| East Asia & Pacific        | 821      |
+| North America              | 651      |
+| Latin America & Caribbean  | 164       |
+| Sub-Saharan Africa         | 126       |
+| Middle East & North Africa                 | 76       |
+| South Asia | 66       |
+
+#### World Bank Income-level regions
+Regions sorted descending based on the total number of corresponding authors:
+| WB Income Region      | Frequency |
+|-----------------------|-----------|
+| High income: OECD     | 3545      |
+| Upper-middle income   | 450      |
+| Lower-middle income   | 109       |
+| Low income            | 29        |
+| High income: non-OECD | 25        |
+
+
+

@@ -17,14 +17,14 @@ hcmap(
   ) 
 
 
-top_first$country <- as.character(top_first$country)
-top_first$country[top_first$country == "USA"] <- "United States of America"
-top_first$country[top_first$country == "UK"] <- "United Kingdom"
-top_first$country <- as.factor(top_first$country)
+top_corresponding$country <- as.character(top_corresponding$country)
+top_corresponding$country[top_corresponding$country == "USA"] <- "United States of America"
+top_corresponding$country[top_corresponding$country == "UK"] <- "United Kingdom"
+top_corresponding$country <- as.factor(top_corresponding$country)
 
 hcmap(
   "custom/world-robinson-lowres", 
-  data = top_first,
+  data = top_corresponding,
   name = "Total First Authors", 
   value = "frequency",
   borderWidth = 0,
@@ -35,4 +35,5 @@ hcmap(
     stops = color_stops(colors = viridisLite::inferno(10, begin = 0.1)),
     type = "logarithmic"
   ) 
+
 
