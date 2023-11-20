@@ -21,7 +21,7 @@ pacman::p_load(dplyr,
 
 # Loading the dataset
 ```{r}
-db <- read.csv(here("data", "cochraneauthors_db.csv"), 
+db = read.csv(here("data", "cochraneauthors_db.csv"), 
                header = TRUE,
                na.strings = c("", "NA"))
 ```
@@ -30,19 +30,13 @@ db <- read.csv(here("data", "cochraneauthors_db.csv"),
 
 Total number of papers:
 ```{r}
-nrow(reviews)
+nrow(db)
 ```
 
 Number of papers that their authors affiliations were retrieved from Cochrane Library successfully:
 ```{r}
 nrow(db)
 ```
-
-Percentage of affiliations successfully retrieved:
-```{r}
-round(nrow(db)/8824*100, 1)
-```
-
 
 # Country and region diversity
 
@@ -400,8 +394,9 @@ plot_trend_region_europe <-
               legend.position = c(0.2, 0.90),
               axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
               )
-
+#png("figures/fig_region-diversity_europe.png", width = 10, height = 7, units = "in", res = 800)
 plot_trend_region_europe
+#dev.off()
 ```
 
 
@@ -425,9 +420,9 @@ yearly_trend_region_highincome <-
         gather("indicator", "value", -year) %>%
         count(year, indicator, value) %>%
         mutate(indicator = recode(indicator,
-                                  first_author_europe = "First authors from High-income OECD countries",
-                                  corresponding_author_europe = "Corresponding authors from High-income OECD countries",
-                                  last_author_europe = "Last authors from High-income OECD countries")) %>%
+                                  first_author_highincome = "First authors from High-income OECD countries",
+                                  corresponding_author_highincome = "Corresponding authors from High-income OECD countries",
+                                  last_author_highincome = "Last authors from High-income OECD countries")) %>%
         complete(indicator, value, year, fill = list(n = 0)) %>%
         group_by(year, indicator) %>% 
         mutate(p = n / sum(n)) %>%
@@ -455,26 +450,154 @@ plot_trend_region_highincome <-
               legend.position = c(0.2, 0.40),
               axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
               )
-
+#png("figures/plot_trend_region_highincome.png", width = 10, height = 7, units = "in", res = 800)
 plot_trend_region_highincome
+#dev.off()
 ```
 
-# English-speaking diversity
-
-
-## Trend
+## English-speaking diversity
+We have the column. So, we directly make a line graph for all three indicators:
 ```{r}
 
-yearly_trend <- db %>%
-  select(year, first_author_english) %>%
-  group_by(year) %>%
-  summarise(counts = n(),
-            english_speaking = sum(first_author_english == "Yes")) %>%
-  mutate(p = english_speaking / counts)
+yearly_trend_region_english <- 
+        db %>% 
+        select(year,
+               first_author_english,
+               corresponding_author_english,
+               last_author_english) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_english = "First authors from English-speaking countries",
+                                  corresponding_author_english = "Corresponding authors from English-speaking countries",
+                                  last_author_english = "Last authors from English-speaking countries")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value == "Yes") %>%
+        ungroup()
+
+plot_trend_region_english <-
+        yearly_trend_region_english %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("First authors from English-speaking countries",
+                                       "Corresponding authors from English-speaking countries",
+                                       "Last authors from English-speaking countries")) +
+        labs(   title="Region diversity in Cochrane Reviews' authorship: English-speaking vs. non-English-speaking",
+                y = "Proportion of authors from English-speaking countries (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.2, 0.40),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+#png("figures/plot_trend_region_english.png", width = 10, height = 7, units = "in", res = 800)
+plot_trend_region_english
+#dev.off()
+```
 
 
-p1 <-
-        yearly_trend %>% 
+## SCImago country rank trend
+To investigate whether Cochrane diversity in English-speaking section is because of organizational measurements or not, we can compare it with global trend. SCImago has the number of papers for each country since 1996. We use 1996, 2000, 2005, 2010, 2015, and 2021 for making our desired trend.
+
+First, loading all xlsx files:
+```{r}
+library(openxlsx)
+
+sci1996 <- read.xlsx("data/scimago/scimagojr country rank 1996.xlsx")
+sci2000 <- read.xlsx("data/scimago/scimagojr country rank 2000.xlsx")
+sci2005 <- read.xlsx("data/scimago/scimagojr country rank 2005.xlsx")
+sci2010 <- read.xlsx("data/scimago/scimagojr country rank 2010.xlsx")
+sci2015 <- read.xlsx("data/scimago/scimagojr country rank 2015.xlsx")
+sci2021 <- read.xlsx("data/scimago/scimagojr country rank 2021.xlsx")
+
+```
+
+Then, we add a column for it:
+```{r}
+
+sci1996$english <- sapply(
+  sci1996$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+
+sci2000$english <- sapply(
+  sci2000$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+
+sci2005$english <- sapply(
+  sci2005$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+
+sci2010$english <- sapply(
+  sci2010$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+
+sci2015$english <- sapply(
+  sci2015$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+
+sci2021$english <- sapply(
+  sci2021$Country,
+  function(x) if (str_extract_all(x, 
+                                  english_speaking) == "character(0)"){
+                                    FALSE
+                                  } else {
+                                    TRUE
+                                  })
+```
+
+Making a new dataframe that has aggregated data:
+```{r}
+
+aggregate(Documents ~ english, data = sci1996, sum) %>% mutate(p = Documents / sum(Documents), year = 1996) %>% filter(english) %>% ungroup()
+
+scimago_trend <- rbind(aggregate(Documents ~ english, data = sci1996, sum) %>% mutate(p = Documents / sum(Documents), year = 1996) %>% filter(english) %>% ungroup(),
+                       aggregate(Documents ~ english, data = sci2000, sum) %>% mutate(p = Documents / sum(Documents), year = 2000) %>% filter(english) %>% ungroup(),
+                       aggregate(Documents ~ english, data = sci2005, sum) %>% mutate(p = Documents / sum(Documents), year = 2005) %>% filter(english) %>% ungroup(),
+                       aggregate(Documents ~ english, data = sci2010, sum) %>% mutate(p = Documents / sum(Documents), year = 2010) %>% filter(english) %>% ungroup(),
+                       aggregate(Documents ~ english, data = sci2015, sum) %>% mutate(p = Documents / sum(Documents), year = 2015) %>% filter(english) %>% ungroup(),
+                       aggregate(Documents ~ english, data = sci2021, sum) %>% mutate(p = Documents / sum(Documents), year = 2021) %>% filter(english) %>% ungroup())
+
+```
+
+
+Now making the SCImago trend
+```{r}
+
+plot_trend_scimago_english <-
+        scimago_trend %>% 
         ggplot() +
         aes(x = year, 
             y = p) +
@@ -482,16 +605,18 @@ p1 <-
         scale_y_continuous(limits = c(0, 1), 
                            labels = scales::percent) +
         scale_color_discrete(name = NULL) +
-        labs(   title="Proportion of papers with first authors from developed English-speaking countries",
-                y = "Proportion of articles (%)", 
+        scale_fill_discrete(breaks = "Documents from English-speaking countries") +
+        labs(   title="Region diversity in authorship of scientific documents (SCImago): English-speaking vs. non-English-speaking",
+                y = "Proportion of authors from English-speaking countries (%)", 
                 x = "Year") +
         theme(panel.grid.minor = element_blank(),
-              legend.position = c(0.13, 0.87),
+              legend.position = c(0.2, 0.40),
               axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
               )
-p1
+#png("figures/plot_trend_scimago_english.png", width = 10, height = 7, units = "in", res = 800)
+plot_trend_scimago_english
+#dev.off()
 ```
-
 
 # Gender diversity
 

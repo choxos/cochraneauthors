@@ -3,136 +3,188 @@ library(dplyr)
 library(here)
 library(purrr)
 library(rvest)
+library(tidyr)
 
-# Loading the list of reviews retrieved through Cochrane Library
-reviews <- read.csv(here("data", "cochraneauthors_db_may8.csv"))
 
-# Create a dataframe that has the URL to the information page for all reviews:
-URLlist <- paste0("https://www.cochranelibrary.com/cdsr/doi/",
-                  reviews$DOI,
-                  "/information")
+# Loading the list of reviews retrieved through Cochrane Library:
+reviews = read.csv(here("data", "cochraneauthors_db_reviews.csv"))
+
+# Next, we want to extract the URL of all versions of a Cochrane review. Cochrane
+# uses .pubx at the end of URL/DOI to indicate the version. URLs/DOIs without
+# .pubx at the end are the ones which their first version is published (usually
+# the protocol). x at .pubx starts with 0 and goes up with the release of each 
+# new version of the review. So, we should check whether the DOI has .pubx at
+# its end and if yes, extract all other previous versions.
+all_dois = data.frame()
+
+for (i in 1:nrow(reviews)){
+    number = i
+    all_dois[i, 1] = db$doi[i]
+    if (grepl("pub", db$doi[i])) {
+      last_number = as.numeric(substr(db$doi[i], nchar(db$doi[i]), nchar(db$doi[i])))
+      for (i in 1:(last_number-1)) {
+        if (i == (last_number-1)) {
+          # Omit .pub1
+          prev_doi = sub("\\.pub\\d+$", "", db$doi[number])
+        } else {
+          # Remove ".pubX" and append the current iteration number
+          prev_doi = sub("\\.pub\\d+$", paste0(".pub", (last_number-1) - i + 1), db$doi[number])
+        }
+        all_dois[number, (i+1)] = prev_doi
+      }
+    }
+}
+
+
+# Now, we want all these DOIs to be in a single column (long format):
+long_dois = gather(all_dois, key = "VType", value = "doi")
+long_dois = na.omit(long_dois)
+
+# Creating a dataframe that has the URL to the information page for all reviews:
+URLlist = paste0("https://www.cochranelibrary.com/cdsr/doi/",
+                 long_dois$doi,
+                 "/information")
 
 # Retrieving all authors names and their affiliations via Cochrane Library
+# + article information
 
-affiliationList <- list() # an empty list to put the affiliations in
+revinfoList = list() # an empty list to put the affiliations in
 
-for(i in URLlist){
-  tryCatch({
-  output <- read_html(i) %>% html_nodes(".authors") %>% 
-    map(~html_nodes(.x, 'li') %>% 
-          html_text() %>% 
-          gsub(pattern = '\\t|\\r|\\n', replacement = ''))
-  affiliationList [[i]] <- output},
-  error = function(e){})
+for(i in URLlist) {
+    # Just showing the progress
+    print(paste0("URL ", which(URLlist == i), " of ", length(URLlist), ". ", "Progress: ", round(which(URLlist == i)/length(URLlist)*100, 2), "%"))
+    print(paste0("Catching URL: ", i))
+    tryCatch({
+      authors = read_html(i) %>% html_nodes(".authors") %>% 
+        map(~html_nodes(.x, 'li') %>% 
+              html_text() %>% 
+              gsub(pattern = '\\t|\\r|\\n', replacement = ''))
+      
+      publish_info_untidy = read_html(i) %>% html_nodes(".publish-information") %>% 
+        map(~html_nodes(.x, 'li') %>% 
+              html_text() %>% 
+              gsub(pattern = '\\t|\\r|\\n', replacement = ''))
+      
+      publish_info = data.frame()
+      publish_info[1,1] = gsub("see what's new ", "", publish_info_untidy[[1]][2])
+      publish_info[1,2] = publish_info_untidy[[1]][3]
+      publish_info[1,3] = publish_info_untidy[[1]][4]
+      publish_info[1,4] = publish_info_untidy[[1]][5]
+      names(publish_info) = c("date", "type", "stage", "group")
+      
+      
+      output = list(authors = authors, publish_info = publish_info)
+      revinfoList[[i]] = output
+    },
+    error = function(e){})
 }
 
 
 # Saving the list to an RDS file
-saveRDS(affiliationList, "affList.rds")
+saveRDS(revinfoList, "data/revinfoList.rds")
 
 
 # Removing unnecessary parts from the names in two steps:
 ## Step 1:
-names(affList) <- gsub("https://www.cochranelibrary.com/cdsr/doi/", 
+names(revinfoList) <- gsub("https://www.cochranelibrary.com/cdsr/doi/", 
                        "", 
-                       as.character(names(affList)))
+                       as.character(names(revinfoList)))
 ## Step 2:
-names(affList) <- gsub("/information", 
+names(revinfoList) <- gsub("/information", 
                        "", 
-                       as.character(names(affList)))
+                       as.character(names(revinfoList)))
 
 # Getting the length of each nested list
-len <- as.data.frame(matrix(NA, ncol = 1, nrow = length(affList)))
+len = as.data.frame(matrix(NA, ncol = 1, nrow = length(revinfoList)))
 
-for (i in 1:length(affList)){
-  if (length(affList[[i]]) == 0) {
-    len[i,] <- 0
+for (i in 1:length(revinfoList)){
+  if (length(revinfoList[[i]]) == 0) {
+    len[i,] = 0
   } else {
-    len[i,] <- length(affList[[i]][[1]])
+    len[i,] = length(revinfoList[[i]][[1]][[1]])
   }
 }
 
 
-# Creating affiliations dataframe:
-aff_df <- as.data.frame(matrix(NA, 
-                           ncol = max(len$V1, na.rm = T), 
-                           nrow = length(affList)))
+# Creating review characteristics dataframe:
+review_df = as.data.frame(matrix(NA, 
+                                 ncol = max(len$V1, na.rm = T), 
+                                 nrow = length(revinfoList)))
 
-for (i in 1:length(affList)) {
-  if (length(affList[[i]]) == 0) {
-    aff_df[i,] <- NA
+for (i in 1:length(revinfoList)) {
+  if (length(revinfoList[[i]]) == 0) {
+    review_df[i,] = NA
   } else {
-    output <- data.frame(plyr::ldply(affList[[i]], rbind))
-    aff_df[i, 1:length(output)] <- output
-    aff_df$doi[i] <- names(affList[i])
+    output = data.frame(plyr::ldply(revinfoList[[i]][[1]], rbind))
+    review_df[i, 1:length(output)] = output
+    review_df$doi[i] <- names(revinfoList[i])
+    review_df$date[i] = revinfoList[[i]][[2]][1]
+    review_df$type[i] = revinfoList[[i]][[2]][2]
+    review_df$stage[i] = revinfoList[[i]][[2]][3]
+    review_df$group[i] = revinfoList[[i]][[2]][4]
   }
 }
 
-write.csv(aff_df, "data/cochraneauthors_affiliations_db.csv")
+review_df = data.frame(lapply(review_df, as.character), stringsAsFactors=FALSE)
+
+write.csv(review_df, "data/cochraneauthors_reviewdf_db.csv")
 
 
 # Creating final db
-db <- reviews %>% select(DOI, 
-                         Author.s., 
-                         Title, 
-                         Year, 
-                         Cochrane.Review.Group.Code)
+db = review_df[, c(42:46, 1:41)]
 
-db <- merge(db, aff_df, by.x = "DOI", by.y = "doi")
+colnames(db) = c("doi",
+                         "date",
+                         "type",
+                         "stage",
+                         "group",
+                         "aff1",
+                         "aff2",
+                         "aff3",
+                         "aff4",
+                         "aff5",
+                         "aff6",
+                         "aff7",
+                         "aff8",
+                         "aff9",
+                         "aff10",
+                         "aff11",
+                         "aff12",
+                         "aff13",
+                         "aff14",
+                         "aff15",
+                         "aff16",
+                         "aff17",
+                         "aff18",
+                         "aff19",
+                         "aff20",
+                         "aff21",
+                         "aff22",
+                         "aff23",
+                         "aff24",
+                         "aff25",
+                         "aff26",
+                         "aff27",
+                         "aff28",
+                         "aff29",
+                         "aff30",
+                         "aff31",
+                         "aff32",
+                         "aff33",
+                         "aff34",
+                         "aff35",
+                         "aff36",
+                         "aff37",
+                         "aff38",
+                         "aff39",
+                         "aff40",
+                         "aff41")
 
-## Changing column names
-colnames(db) <- c("doi",
-                  "authors",
-                  "title",
-                  "year",
-                  "revgroup",
-                  "aff1",
-                  "aff2",
-                  "aff3",
-                  "aff4",
-                  "aff5",
-                  "aff6",
-                  "aff7",
-                  "aff8",
-                  "aff9",
-                  "aff10",
-                  "aff11",
-                  "aff12",
-                  "aff13",
-                  "aff14",
-                  "aff15",
-                  "aff16",
-                  "aff17",
-                  "aff18",
-                  "aff19",
-                  "aff20",
-                  "aff21",
-                  "aff22",
-                  "aff23",
-                  "aff24",
-                  "aff25",
-                  "aff26",
-                  "aff27",
-                  "aff28",
-                  "aff29",
-                  "aff30",
-                  "aff31",
-                  "aff32",
-                  "aff33",
-                  "aff34",
-                  "aff35",
-                  "aff36",
-                  "aff37",
-                  "aff38",
-                  "aff39",
-                  "aff40",
-                  "aff41")
+# Convert date to date format:
+db$date = as.Date(db$date, format = "%d %b %Y")
 
-## Saving the dataframe
+
 write.csv(db, "data/cochraneauthors_db.csv")
-
-
-
 
 
 # Extracting first authors countries, regions, and genders
@@ -259,13 +311,13 @@ corres_db <- as.data.frame(matrix(NA, ncol = 1, nrow = nrow(db)))
 
 
 for (i in 1:nrow(db)) {
-  a <- grep("Correspondence", db[i, 6:46], value = T)
+  a = grep("Correspondence", db[i, 6:46], value = T)[1]
   if (length(a) == 0){
-    a <- NA
+    a = NA
   } else {
     a = a
   }
-  corres_db[i, ] <- a
+  corres_db[i, ] = a
 }
 
 ### Some of the reviews are withdrawn hence they do not have corresponding
@@ -276,7 +328,7 @@ for (i in 1:nrow(db)) {
 
 ### Next, we make a column for corresponding authors countries:
 
-db$corresponding_author_country <- 
+db$corresponding_author_country = 
   sapply(str_extract_all(corres_db$V1, all_countries), 
          toString)
 
@@ -284,7 +336,7 @@ db$corresponding_author_country <-
 ### sometimes the country differs, we extract only the country of their first 
 ### affiliation as it is their main affiliation:
 
-db$corresponding_author_country <- gsub("[,;(].*$",
+db$corresponding_author_country = gsub("[,;(].*$",
                                         "", 
                                         db$corresponding_author_country)
 
@@ -344,9 +396,9 @@ db$corresponding_author_english <- sapply(
 ## Gender analysis
 
 ## Extract the first word from affiliations:
-db$corresponding_author_given_name <- ifelse(word(db$aff1, 1) == "G", 
-                                             word(db$aff1, 2), 
-                                             word(db$aff1, 1))
+db$corresponding_author_given_name <- ifelse(word(corres_db$V1, 1) == "G", 
+                                             word(corres_db$V1, 2), 
+                                             word(corres_db$V1, 1))
 
 ### This takes a while
 for (i in 1:nrow(db)) {
@@ -363,13 +415,13 @@ for (i in 1:nrow(db)) {
 # Extracting last authors countries, regions, and genders
 ### First, extracting affiliation of the last authors:
 
-last_db <- as.data.frame(matrix(NA, ncol = 1, nrow = nrow(db)))
+last_db = as.data.frame(matrix(NA, ncol = 1, nrow = nrow(db)))
 
 for (i in 1:nrow(db)) {
-  a <- db[i,] %>% select(6:46)
-  a <- as.data.frame(a[, colSums(is.na(a)) == 0])
-  b <- a[, ncol(a)]
-  last_db[i,] <- b
+  a = db[i,] %>% select(6:46)
+  a = as.data.frame(a[, colSums(is.na(a)) == 0])
+  b = a[, ncol(a)]
+  last_db[i,] = b
 }
 
 
@@ -441,9 +493,9 @@ db$last_author_english <- sapply(
 ## Gender analysis
 
 ## Extract the first word from affiliations:
-db$last_author_given_name <- ifelse(word(db$aff1, 1) == "G", 
-                                             word(db$aff1, 2), 
-                                             word(db$aff1, 1))
+db$last_author_given_name <- ifelse(word(last_db$V1, 1) == "G", 
+                                             word(last_db$V1, 2), 
+                                             word(last_db$V1, 1))
 
 ### This takes a while
 

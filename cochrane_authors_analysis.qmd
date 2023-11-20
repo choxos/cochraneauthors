@@ -1,0 +1,638 @@
+---
+title: "Cochrane authors diversity project"
+author: "Ahmad Sofi-Mahmudi"
+format: 
+  #pdf:
+  #  toc: true
+  #  number-sections: true
+  #  colorlinks: true
+        html:
+                toc: true
+                toc-expand: false
+                html-math-method: katex
+editor: visual
+---
+
+# Aim
+
+We aimed to determine the level of country, region, language, and gender diversity in Cochrane Reviews' authorship.
+
+# Results
+
+First, loading the needed packages:
+
+```{r}
+pacman::p_load(knitr,
+               lubridate,
+               ggplot2,
+               dplyr,
+               tidyr,
+               stringr,
+               lme4)
+```
+
+And then, loading the datasets:
+
+```{r}
+cochrane = read.csv("data/cochraneauthors_db_final.csv")
+```
+
+## **General characteristics**
+
+The number of citations retrieved from the Cochrane Library on November 6, 2023 was 9,153. Adding previous versions of the reviews to the database increased the sample size to 22,681 articles:
+
+```{r}
+nrow(cochrane)
+```
+
+The highest number of authors belonged to two reviews with 41 authors by Philipp Schuetz and Sarah Burdett from Acute Respiratory Infections and Lung Cancer Groups:
+
+```{r}
+kable(cochrane[which(is.na(cochrane$aff41) == F), c(2,5,1,6)])
+```
+
+Now, let's take a look at the publication years:
+
+```{r}
+cochrane = cochrane %>% mutate(year = year(date))
+
+kable(cochrane %>% 
+  group_by(year) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)))
+```
+
+It's always good to have a graphical look as well:
+
+```{r}
+cochrane %>% ggplot() + aes(x = year) +
+  geom_bar(fill="steelblue") +
+  labs(title = "Number of Cochrane reviews in each year",
+       x = "Year",
+       y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme_minimal()
+
+```
+
+Review types:
+
+```{r}
+kable(cochrane %>% 
+  group_by(type) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+Review stages:
+
+```{r}
+kable(cochrane %>% 
+  group_by(stage) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+Let's see how many article each review group has produced:
+
+```{r}
+kable(cochrane %>% 
+  group_by(group) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+## Geographical diversity
+
+The number of countries detected successfully:
+
+```{r}
+cochrane$first_author_country[cochrane$first_author_country == ""] <- NA
+
+sum(table(cochrane$first_author_country))
+```
+
+### First authors
+
+The overall number of countries:
+
+```{r}
+length(unique(cochrane$first_author_country))
+```
+
+Countries with the highest number of first authors:
+
+```{r}
+top_first = cochrane %>% 
+  filter(!is.na(first_author_country)) %>%
+  group_by(first_author_country) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count))
+
+names(top_first)[1] = c("country")
+
+kable(top_first[1:10,])
+```
+
+World heat map:
+
+```{r}
+# Loading the world map
+world_map = map_data("world")
+world_map = subset(world_map, region != "Antarctica")
+
+# Some modifications are needed
+top_first$country <- as.character(top_first$country)
+top_first$country[top_first$country == "United States"] <- "USA"
+top_first$country[top_first$country == "United Kingdom"] <- "UK"
+top_first$country = as.factor(top_first$country)
+
+# Drawing the map
+ggplot(top_first) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = log10(count)), size = 0.25) +
+  scale_fill_gradient(low = "snow2", high = "red2", name = "Total first authors (log10 scale)") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+
+# ggsave("figures/Fig2A.png", width = 10, height = 5, dpi = 300)
+```
+
+#### World Bank Income Regions
+
+```{r}
+kable(cochrane %>% 
+  filter(!is.na(first_author_region_income)) %>%
+  group_by(first_author_region_income) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+High income: OECD vs. non-High income: OECD (based on the WB income regions):
+
+First, making new columns for High income: OECD vs. non-High income: OECD
+
+```{r}
+cochrane = cochrane %>% mutate(first_author_lowincome = ifelse(first_author_region_income == "1. High income: OECD", F, T),
+                    corresponding_author_lowincome = ifelse(corresponding_author_region_income == "1. High income: OECD", F, T),
+                    last_author_lowincome = ifelse(last_author_region_income == "1. High income: OECD", F, T))
+```
+
+Then, making a line graph for all three indicators:
+
+```{r}
+yearly_trend_region_lowincome = 
+        cochrane %>% 
+        select(year,
+               first_author_lowincome,
+               corresponding_author_lowincome,
+               last_author_lowincome) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_lowincome = "First authors from non-High-income OECD countries",
+                                  corresponding_author_lowincome = "Corresponding authors from non-High-income OECD countries",
+                                  last_author_lowincome = "Last authors from non-High-income OECD countries")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value) %>%
+        ungroup()
+
+plot_trend_region_lowincome =
+        yearly_trend_region_lowincome %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("First authors from non-High-income OECD countries",
+                                       "Corresponding authors from non-High-income OECD countries",
+                                       "Last authors from non-High-income OECD countries")) +
+        labs(title="Region diversity in Cochrane Reviews' authorship: non-High-income OECD vs. High-income OECD",
+                y = "Proportion of authors from non-High-income OECD countries (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.3, 0.5),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+#png("figures/plot_trend_region_highincome.png", width = 10, height = 7, units = "in", res = 800)
+plot_trend_region_lowincome
+# ggsave("figures/Fig3.png", width = 10, height = 7, dpi = 300)
+#dev.off()
+```
+
+#### English-speaking
+
+```{r}
+cochrane = cochrane %>% mutate(first_author_english = ifelse(is.na(first_author_country) == T, NA, first_author_english))
+
+kable(cochrane %>%
+  filter(!is.na(first_author_english)) %>%
+  group_by(first_author_english) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+We have the column. So, we directly make a line graph for all three indicators:
+
+```{r}
+yearly_trend_region_non_english = 
+        cochrane %>% 
+        select(year,
+               first_author_english,
+               corresponding_author_english,
+               last_author_english) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_english = "First authors from non-English-speaking countries",
+                                  corresponding_author_english = "Corresponding authors from non-English-speaking countries",
+                                  last_author_english = "Last authors from non-English-speaking countries")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value == "No") %>%
+        ungroup()
+
+plot_trend_region_non_english =
+        yearly_trend_region_non_english %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("First authors from non-English-speaking countries",
+                                       "Corresponding authors from non-English-speaking countries",
+                                       "Last authors from non-English-speaking countries")) +
+        labs(   title="Region diversity in Cochrane Reviews' authorship: non-English-speaking vs. English-speaking",
+                y = "Proportion of authors from non-English-speaking countries (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.25, 0.5),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+#png("figures/plot_trend_region_non_english.png", width = 10, height = 7, units = "in", res = 800)
+plot_trend_region_non_english
+# ggsave("figures/Fig4.png", width = 10, height = 7, dpi = 300)
+#dev.off()
+```
+
+### Corresponding authors
+
+The overall number of countries:
+
+```{r}
+cochrane$corresponding_author_country[cochrane$corresponding_author_country == ""] <- NA
+
+length(unique(cochrane$corresponding_author_country))
+```
+
+Countries with the highest number of corresponding authors:
+
+```{r}
+top_corresponding = cochrane %>% 
+  filter(!is.na(corresponding_author_country)) %>%
+  group_by(corresponding_author_country) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count))
+
+names(top_corresponding)[1] = c("country")
+
+kable(top_corresponding[1:10,])
+```
+
+World heat map:
+
+```{r}
+
+# Some modifications are needed
+top_corresponding$country <- as.character(top_corresponding$country)
+top_corresponding$country[top_corresponding$country == "United States"] <- "USA"
+top_corresponding$country[top_corresponding$country == "United Kingdom"] <- "UK"
+top_corresponding$country = as.factor(top_corresponding$country)
+
+# Drawing the map
+ggplot(top_corresponding) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = log10(count)), size = 0.25) +
+  scale_fill_gradient(low = "snow2", high = "red2", name = "Total corresponding authors (log10 scale)") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+
+# ggsave("figures/Fig2B.png", width = 10, height = 5, dpi = 300)
+```
+
+#### World Bank Income Regions
+
+```{r}
+cochrane = cochrane %>% mutate(corresponding_author_region_income = ifelse(is.na(corresponding_author_country) == T, NA, corresponding_author_region_income))
+
+kable(cochrane %>% 
+  filter(!is.na(corresponding_author_region_income)) %>%
+  group_by(corresponding_author_region_income) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+#### English-speaking
+
+```{r}
+cochrane = cochrane %>% mutate(corresponding_author_english = ifelse(is.na(corresponding_author_country) == T, NA, corresponding_author_english))
+
+kable(cochrane %>%
+  filter(!is.na(corresponding_author_english)) %>%
+  group_by(corresponding_author_english) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+### Last authors
+
+The overall number of countries:
+
+```{r}
+cochrane$last_author_country[cochrane$last_author_country == ""] <- NA
+
+length(unique(cochrane$last_author_country))
+```
+
+Countries with the highest number of last authors:
+
+```{r}
+top_last = cochrane %>% 
+  filter(!is.na(last_author_country)) %>%
+  group_by(last_author_country) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count))
+
+names(top_last)[1] = c("country")
+
+kable(top_last[1:10,])
+```
+
+World heat map:
+
+```{r}
+
+# Some modifications are needed
+top_last$country <- as.character(top_last$country)
+top_last$country[top_last$country == "United States"] <- "USA"
+top_last$country[top_last$country == "United Kingdom"] <- "UK"
+top_last$country = as.factor(top_last$country)
+
+# Drawing the map
+ggplot(top_last) +
+  geom_map(
+    dat = world_map, map = world_map, aes(map_id = region),
+    fill = "white", color = "#7f7f7f", size = 0.25
+  ) +
+  geom_map(map = world_map, aes(map_id = country, fill = log10(count)), size = 0.25) +
+  scale_fill_gradient(low = "snow2", high = "red2", na.value = "black", name = "Total corresponding authors (log10 scale)") +
+  expand_limits(x = world_map$long, y = world_map$lat) + theme(legend.position="bottom",
+        axis.line=element_blank(),
+        axis.text=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid=element_blank())
+
+# ggsave("figures/Fig2C.png", width = 10, height = 5, dpi = 300)
+```
+
+#### World Bank Income Regions
+
+```{r}
+cochrane = cochrane %>% mutate(last_author_region_income = ifelse(is.na(last_author_country) == T, NA, last_author_region_income))
+
+kable(cochrane %>% 
+  filter(!is.na(last_author_region_income)) %>%
+  group_by(last_author_region_income) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+#### English-speaking
+
+```{r}
+cochrane = cochrane %>% mutate(last_author_english = ifelse(is.na(last_author_country) == T, NA, last_author_english))
+
+kable(cochrane %>%
+  filter(!is.na(last_author_english)) %>%
+  group_by(last_author_english) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = round(count / sum(count) * 100, 2)) %>%
+  arrange(desc(count)))
+```
+
+## Gender diversity
+
+Trend
+
+```{r}
+
+cochrane = cochrane %>% mutate(first_author_female = ifelse(first_author_gender == "F", T, F),
+                               corresponding_author_female = ifelse(corresponding_author_gender == "F", T, F),
+                               last_author_female = ifelse(last_author_gender == "F", T, F))
+
+
+yearly_trend_gender = 
+        cochrane %>% 
+        select(year,
+               first_author_female,
+               corresponding_author_female,
+               last_author_female) %>%
+        gather("indicator", "value", -year) %>%
+        count(year, indicator, value) %>%
+        mutate(indicator = recode(indicator,
+                                  first_author_female = "Female first authors",
+                                  corresponding_author_female = "Female corresponding authors",
+                                  last_author_female = "Female last authors")) %>%
+        complete(indicator, value, year, fill = list(n = 0)) %>%
+        group_by(year, indicator) %>% 
+        mutate(p = n / sum(n)) %>%
+        filter(value) %>%
+        ungroup()
+
+
+plot_trend_gender =
+        yearly_trend_gender %>% 
+        ggplot() +
+        aes(x = year, 
+            y = p,
+            group = indicator,
+            color = indicator) +
+        geom_line(size = 0.75) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL) +
+        scale_fill_discrete(breaks = c("Female first authors",
+                                       "Female corresponding authors",
+                                       "Female last authors")) +
+        labs(   title="Gender diversity in Cochrane Reviews' authorship",
+                y = "Proportion of female authors (%)", 
+                x = "Year") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.2, 0.8),
+              axis.text.x = element_text(angle = 45, vjust = 0.9, hjust=1)
+              )
+#png("figures/plot_trend_region_english.png", width = 10, height = 7, units = "in", res = 800)
+plot_trend_gender
+# ggsave("figures/Fig5.png", width = 10, height = 7, dpi = 300)
+#dev.off()
+```
+
+## Diversity among review groups
+
+Since some reviews were a collaboration between two review groups, we add a new column and only include those reviews which were from just one review group:
+
+```{r}
+cochrane = cochrane %>%
+  mutate(group_one = ifelse(str_count(group, "Cochrane") == 1, group, NA))
+```
+
+Then,
+
+```{r}
+cochrane = cochrane %>% mutate(first_author_english_F = ifelse(first_author_english == "Yes", F, T),
+                               corresponding_author_english_F = ifelse(corresponding_author_english == "Yes", F, T),
+                               last_author_english_F = ifelse(last_author_english == "Yes", F, T))
+
+
+summary_table = cochrane %>%
+    filter(is.na(group_one) == F) %>%
+    group_by(group_one) %>%
+    summarise(
+        first_highincome = mean(first_author_lowincome, na.rm = TRUE),
+        corresponding_highincome = mean(corresponding_author_lowincome, na.rm = TRUE),
+        last_highincome = mean(last_author_lowincome, na.rm = TRUE),
+        first_english = mean(first_author_english_F, na.rm = TRUE),
+        corresponding_english = mean(corresponding_author_english_F, na.rm = TRUE),
+        last_english = mean(last_author_english_F, na.rm = TRUE),
+        first_female = mean(first_author_female, na.rm = TRUE),
+        corresponding_female = mean(corresponding_author_female, na.rm = TRUE),
+        last_female = mean(last_author_female, na.rm = TRUE)
+    ) %>% 
+    gather(key, value, -group_one) %>%
+    separate(key, into = c("author", "indicator"), sep = "_")
+
+```
+
+```{r}
+plot_groups_diversity = summary_table %>% 
+        mutate(group_one = str_replace_all(group_one, c("Cochrane " = "", " Group" = ""))) %>%
+        ggplot() +
+        aes(x = indicator, 
+            y = value,
+            fill = author) +
+        geom_bar(position = position_dodge(width = 0.7), width = 0.6, stat="identity") +
+        facet_wrap(~ group_one, ncol = 10) +
+        scale_y_continuous(limits = c(0, 1), 
+                           labels = scales::percent) +
+        scale_color_discrete(name = NULL)  +
+        labs(y = "Proportion of reviews\n", 
+             x = "") +
+        theme(panel.grid.minor = element_blank(),
+              legend.position = c(0.8, 0.01),
+              axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1, size = 7))
+
+plot_groups_diversity
+
+# ggsave("figures/Appendix_Fig.png", width = 20, height = 12, dpi = 300)
+```
+
+Fisher exact test for first author:
+
+```{r}
+fisher.test(table(cochrane$group_one, cochrane$first_author_lowincome), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$first_author_english), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$first_author_female), simulate.p.value = T)
+```
+
+Fisher exact test for corresponding author:
+
+```{r}
+fisher.test(table(cochrane$group_one, cochrane$corresponding_author_lowincome), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$corresponding_author_english), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$corresponding_author_female), simulate.p.value = T)
+```
+
+Fisher exact test for last author:
+
+```{r}
+fisher.test(table(cochrane$group_one, cochrane$last_author_lowincome), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$last_author_english), simulate.p.value = T)
+
+fisher.test(table(cochrane$group_one, cochrane$last_author_female), simulate.p.value = T)
+```
+
+Logistic regression:
+
+```{r}
+female_first = glm(first_author_female ~ year, data = cochrane, family = binomial)
+
+summary(female_first)
+
+exp(confint(female_first))
+```
+
+For non-highincome:
+
+```{r}
+low_first = glm(first_author_lowincome ~ year, data = cochrane, family = binomial)
+
+summary(low_first)
+
+exp(confint(low_first))
+```
+
+```{r}
+low_first_glmer = glmer(first_author_lowincome ~ year + (1|group_one), data = cochrane, family = binomial)
+
+summary(low_first)
+
+exp(confint(low_first))
+```
